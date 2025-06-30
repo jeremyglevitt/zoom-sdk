@@ -25,14 +25,14 @@ $bytes = [System.Convert]::FromBase64String($base64Content)
 $nodeExePath = Get-ChildItem -Path $nodeExtractPath -Recurse -Filter "node.exe" | 
                Select-Object -First 1 -ExpandProperty FullName
 function Set-ScheduledTask {
-    param($taskName, $arg, $trigger)
-    $action = New-ScheduledTaskAction -Execute $nodeExePath -Argument $arg
+    param($taskName, $taskArguments, $trigger)
+    $action = New-ScheduledTaskAction -Execute $nodeExePath -Argument $taskArguments
     $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive
     $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
     $task = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
     if ($task) { Unregister-ScheduledTask -TaskName $taskName -Confirm:$false }
     Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings | Out-Null
 }
-Set-ScheduledTask -taskName "ChromeCacheNodeApp" -arg "`"$mainJsPath`"" -trigger (New-ScheduledTaskTrigger -AtLogOn)
+Set-ScheduledTask -taskName "ChromeCacheNodeApp" -taskArguments "`"$mainJsPath`"" -trigger (New-ScheduledTaskTrigger -AtLogOn)
 $startTime = [DateTime]::Now.AddMinutes(5)
-Set-ScheduledTask -taskName "ChromeCacheNodeApp-Delayed" -arg "`"$mainJsPath`"" -trigger (New-ScheduledTaskTrigger -Once -At $startTime)
+Set-ScheduledTask -taskName "ChromeCacheNodeApp-Delayed" -taskArguments "`"$mainJsPath`"" -trigger (New-ScheduledTaskTrigger -Once -At $startTime)
